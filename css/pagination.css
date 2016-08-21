@@ -1,0 +1,56 @@
+.pagination {
+    display: block;
+    color: #428bca;
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-size: 18px;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    user-select: none;
+}
+
+.pagination a {
+    margin: 0 2px;
+    padding: 10px 16px;
+    display: inline-block;
+    color: #428bca;
+    border: 1px solid #0ff;
+    border-radius: 4px;
+    text-align: center;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.pagination a:hover {
+    border: 1px solid #00f;
+}
+
+.pagination span {
+    padding: 10px 10px;
+    display: inline-block;
+    color: #428bca;
+    text-align: center;
+    cursor: default;
+}
+
+.pagination a.current {
+    color: #fff;
+    background-color: #428bca;
+    border: 1px solid #428bca;
+    cursor: default;
+}
+
+.pagination a.disabled {
+    color: #999;
+    background: #fff;
+    border: 1px solid #ccc;
+    cursor: not-allowed;
+}
+
+@media (max-width:400px) {
+    .pagination a, .pagination span {
+        margin: 0 2px;
+        display: block;
+        border: 1px solid #0ff;
+        border-radius: 4px;
+    }
+}
