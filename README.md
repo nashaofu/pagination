@@ -1,10 +1,12 @@
 # pagination
 这是一个基于jQuery的翻页按钮插件！
+
 # 插件说明
 * 浏览器支持IE7+、Firefox、Chrome
 * 插件支持自定义页码长度
 * 插件支持data属性获取插件信息
 * 插件支持一个CSS选择器生成多个独立的分页列表
+
 # 插件调用示例
 ## HTML代码
     <ul class="pagination"></ul>
