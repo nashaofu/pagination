@@ -2,16 +2,19 @@
 这是一个基于jQuery的翻页按钮插件！
 # 插件调用示例
 ## HTML代码
-    <div class="pagination"></div>
+    <ul class="pagination"></ul>
 ## jQuery代码
 	$('.pagination').pagination({
-		total: 20,
-		current: 5,
-		callback: function(e) {
-			//参数e为返回的当前页数
+		total: 30, // 页码总数
+		active: 1, // 当前页码
+        size: 2, // 当前页码两边显示页码数量
+        prev: "&lt;", // 上一页默认符号
+        next: "&gt;", // 下一页默认符号
+        click: function(e) {
+        	//参数e为返回的当前页数
 			//可以在下面调用e
 			console.log(e);
-		}
+        }
 	});
 ## 完整示例
 	<!DOCTYPE html>
@@ -36,14 +39,16 @@
 	</head>
 	<body>
 		<div class="box">
-		    <div class="pagination"></div>
+		    <ul class="pagination"></ul>
 		</div>
 		<div class="show"></div>
 		<script type="text/javascript">
-		$('.pagination').pagination({
-		    total: 20,
-		    current: 5,
-		    callback: function(e) {
+		var pagination=$('.pagination').pagination({
+		    total: 30,
+		    active: 1,
+		    size: 3,
+		    click: function(e) {
+		    	console.log(pagination);
 		        $('.show').text('当前为：第'+e+'页');
 		    }
 		});

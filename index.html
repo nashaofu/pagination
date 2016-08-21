@@ -20,14 +20,16 @@
 </head>
 <body>
 	<div class="box">
-	    <div class="pagination"></div>
+	    <ul class="pagination"></ul>
 	</div>
 	<div class="show"></div>
 	<script type="text/javascript">
-	$('.pagination').pagination({
-	    total: 20,
-	    current: 5,
-	    callback: function(e) {
+	var pagination=$('.pagination').pagination({
+	    total: 30,
+	    active: 1,
+	    size: 3,
+	    click: function(e) {
+	    	console.log(pagination);
 	        $('.show').text('当前为：第'+e+'页');
 	    }
 	});

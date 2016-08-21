@@ -1,98 +1,182 @@
-(function($) {
+/**
+ * 黑桃Lab 分页插件 Pagination
+ * 插件支持IE7及其以上版本浏览器
+ * @param  {[type]} factory [description]
+ * @return {[type]}         [description]
+ */
+(function(factory) {
+    "use strict";
+    if (typeof define === "function" && define.amd) {
+        /** AMD规范模块调用 */
+        define(["jquery"], factory);
+    } else if (typeof define === "function" && define.cmd) {
+        /** CMD规范模块调用 */
+        define(function(require, exports, module) {
+            factory(require("jquery"));
+        });
+    } else {
+        /** 在浏览器环境下 */
+        factory(jQuery);
+    }
+})(function($) {
     'use strict';
-    var pagination = {
-        init: function(options) {
-            if (typeof(options) == 'undefined') {
-                throw new Error('参数未定义');
-            }
-            if (typeof(options.object) != 'object') {
-                throw new Error('参数类型不是Object');
-            }
-            if (typeof(options.total) != 'number' || typeof(options.current) != 'number') {
-                throw new Error('参数类型不是Number');
-            }
-            if (options.total < 1) {
-                throw new Error('参数不能小于1');
-            }
-            if (options.current < 1 || options.current > options.total) {
-                throw new Error('参数必须大于0小于总页数');
-            }
-            if (typeof(options.callback) != 'function') {
-                throw new Error('回调参数不是function');
-            }
-            return (function(options) {
-                pagination.build(options);
-                pagination.bindEvent(options);
-            })(options);
-        },
-        build: function(options) {
+    /**
+     * 分页按钮构造函数
+     * @param {[type]} $target [description]
+     * @param {[type]} options [description]
+     */
+    var Pagination = function($target, options) {
+        this.$target = $target;
+        this.options = $.extend({}, Pagination.DEFAULTS, this.$target.data("pagination"), typeof options == "object" && options);
+        if (this.options.total < 1) {
+            throw new Error("页码总数不得小于1");
+        }
+        if (this.options.active < 1 || this.options.active > this.options.total) {
+            throw new Error("页码必须是1~总页码之间的数字");
+        }
+        if (this.options.size < 1) {
+            throw new Error("可见页码数不得小于1");
+        }
+        this.active = this.options.active;
+        this.size = this.options.size;
+        this.build();
+        this.onClick();
+    };
+    // 插件版本号
+    Pagination.VERSION = "1.1.0";
+    // 插件默认值
+    Pagination.DEFAULTS = {
+        total: 1, // 页码总数
+        active: 1, // 当前页码
+        size: 2, // 当前页码两边显示页码数量
+        prev: "&lt;", // 上一页默认符号
+        next: "&gt;", // 下一页默认符号
+        click: function(e) {} //点击回调函数
+    };
+    // 插件原型方法
+    Pagination.prototype = {
+        // 构建html
+        build: function() {
+            var me = this,
+                $target = me.$target,
+                options = me.options;
             //清空分页按钮
-            options.object.empty();
-            if (options.current > 1) {
-                options.object.append('<a href="javascript:void(0);" class="prev">上一页</a>');
-            } else {
-                options.object.remove('.prev');
-                options.object.append('<a href="javascript:void(0);" class="disabled">上一页</a>');
+            $target.empty();
+            // 上一页
+            $target.append('<li><a herf="javascript:void(0)" data-page="prev">' + options.prev + '</a></li>');
+            // 第一页
+            $target.append('<li><a herf="javascript:void(0)" data-page="1">1</a></li>');
+            // 生成中间页码
+            var size = me.getSize();
+            for (var i = size.start; i <= size.end; i++) {
+                $target.append('<li><a herf="javascript:void(0)" data-page="' + i + '">' + i + '</a></li>');
             }
-            if (options.current != 1 && options.current >= 4 && options.total != 4) {
-                options.object.append('<a href="javascript:void(0);" class="page">' + 1 + '</a>');
+            // 最后一页
+            $target.append('<li><a herf="javascript:void(0)" data-page="' + options.total + '">' + options.total + '</a></li>');
+            // 下一页
+            $target.append('<li><a herf="javascript:void(0)" data-page="next">' + options.next + '</a></li>');
+            // 生成省略页码
+            var ellipsis = me.getEllipsis();
+            for (var i = 0; i < ellipsis.length; i++) {
+                $target.find('li>a[data-page="' + ellipsis[i] + '"]').parent("li").after('<li><span>...</span></li>');
             }
-            if (options.current - 2 > 2 && options.current <= options.total && options.total > 5) {
-                options.object.append('<span>...</span>');
+            me.addClass();
+        },
+        // 获取中间页码起始值
+        getSize: function() {
+            var me = this,
+                $target = me.$target,
+                options = me.options,
+                start = me.active - me.size,
+                end = me.active + me.size;
+            // 获取开始页码
+            if (me.active >= options.total - me.size) {
+                start -= me.active - options.total + me.size;
             }
-            var start = options.current - 2,
-                end = options.current + 2;
-            if ((start > 1 && options.current < 4) || options.current == 1) {
-                end++;
+            // 获取结束页码
+            if (me.active <= me.size) {
+                end += me.size - me.active + 1;
             }
-            if (options.current > options.current - 4 && options.current >= options.total) {
-                start--;
+            // 起始页码不得小于等于1
+            if (start <= 1) {
+                start = 2;
             }
-            for (; start <= end; start++) {
-                if (start <= options.total && start >= 1) {
-                    if (start != options.current) {
-                        options.object.append('<a href="javascript:void(0);" class="page">' + start + '</a>');
-                    } else {
-                        options.object.append('<a href="javascript:void(0);" class="current">' + start + '</a>');
+            // 终止页码不得大于等于总页数
+            if (end >= options.total) {
+                end = options.total - 1;
+            }
+            var size = {
+                start: start,
+                end: end
+            }
+            return size;
+        },
+        // 获取插入省略符位置
+        getEllipsis: function() {
+            var me = this,
+                $target = me.$target,
+                options = me.options,
+                page = [];
+            $target.find("li").each(function(i) {
+                var current = $(this).children("a[data-page]").data("page");
+                var next = $(this).next("li").children("a[data-page]").data("page");
+                if (!isNaN(current) && !isNaN(next)) {
+                    if (current + 1 != next) {
+                        page.push(current);
                     }
                 }
+            });
+            return page;
+        },
+        addClass: function() {
+            var me = this,
+                $target = me.$target,
+                options = me.options;
+            // 设置当前页码样式
+            $target.find('li>a[data-page="' + me.active + '"]').addClass("active");
+            // 设置上一页样式
+            if (me.active <= 1) {
+                $target.find('li>a[data-page="prev"]').addClass("disabled");
             }
-            if (options.current + 2 < options.total - 1 && options.current >= 1 && options.total > 5) {
-                options.object.append('<span>...</span>');
-            }
-            if (options.current != options.total && options.current < options.total - 2 && options.total != 4) {
-                options.object.append('<a href="javascript:void(0);" class="page">' + options.total + '</a>');
-            }
-            //下一页
-            if (options.current < options.total) {
-                options.object.append('<a href="javascript:void(0);" class="next">下一页</a>');
-            } else {
-                options.object.remove('.next');
-                options.object.append('<a href="javascript:void(0);" class="disabled">下一页</a>');
+            // 设置下一页样式
+            if (me.active >= options.total) {
+                $target.find('li>a[data-page="next"]').addClass("disabled");
             }
         },
-        bindEvent: function(options) {
-            options.object.on("click", "a.page", function() {
-                options.current = parseInt($(this).text());
-                pagination.build(options);
-                options.callback(options.current);
-            });
-            //上一页
-            options.object.on("click", "a.prev", function() {
-                options.current = parseInt(options.object.children("a.current").text()) - 1;
-                pagination.build(options);
-                options.callback(options.current);
-            });
-            //下一页
-            options.object.on("click", "a.next", function() {
-                options.current = parseInt(options.object.children("a.current").text()) + 1;
-                pagination.build(options);
-                options.callback(options.current);
+        // 页码点击事件
+        onClick: function() {
+            var me = this,
+                $target = me.$target,
+                options = me.options;
+            $target.on("click", "a[data-page]", function() {
+                if ($(this).data("page") === "prev") {
+                    if (me.active > 1) {
+                        me.active--;
+                    } else {
+                        return;
+                    }
+                } else if ($(this).data("page") === "next") {
+                    if (me.active < options.total) {
+                        me.active++;
+                    } else {
+                        return;
+                    }
+                } else {
+                    if (!isNaN($(this).data("page"))) {
+                        me.active = parseInt($(this).data("page"));
+                    } else {
+                        return;
+                    }
+                }
+                me.build();
+                options.click(me.active);
             });
         }
-    }
+    };
+    // 定义为jQuery插件
     $.fn.pagination = function(options) {
-        options.object = this;
-        pagination.init(options);
+        var pagination = new Pagination(this, options);
+        this.data("pagination", pagination);
+        return pagination;
     }
-})(jQuery);
+});
