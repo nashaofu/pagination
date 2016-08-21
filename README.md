@@ -55,5 +55,5 @@
 		</script>
 	</body>
 	</html>
-插件示例
+## 插件示例
 [DEMO](https://diaocheng.github.io/pagination/)
