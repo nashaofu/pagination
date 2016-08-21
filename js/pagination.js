@@ -120,6 +120,7 @@
             $target.find("li").each(function(i) {
                 var current = $(this).children("a[data-page]").data("page");
                 var next = $(this).next("li").children("a[data-page]").data("page");
+                // 如果页码不连续记录下位置
                 if (!isNaN(current) && !isNaN(next)) {
                     if (current + 1 != next) {
                         page.push(current);
@@ -150,18 +151,21 @@
                 options = me.options;
             $target.on("click", "a[data-page]", function() {
                 if ($(this).data("page") === "prev") {
+                    // 上一页
                     if (me.active > 1) {
                         me.active--;
                     } else {
                         return;
                     }
                 } else if ($(this).data("page") === "next") {
+                    // 下一页
                     if (me.active < options.total) {
                         me.active++;
                     } else {
                         return;
                     }
                 } else {
+                    // 页码点击
                     if (!isNaN($(this).data("page"))) {
                         me.active = parseInt($(this).data("page"));
                     } else {
@@ -169,14 +173,16 @@
                     }
                 }
                 me.build();
-                options.click(me.active);
+                // 返回当前页和页码列表jQuery对象
+                options.click(me.active, $target);
             });
         }
     };
     // 定义为jQuery插件
     $.fn.pagination = function(options) {
-        var pagination = new Pagination(this, options);
-        this.data("pagination", pagination);
-        return pagination;
+        this.each(function() {
+            $(this).data("pagination", new Pagination($(this), options));
+        });
+        return this;
     }
 });

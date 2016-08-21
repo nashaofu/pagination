@@ -7,32 +7,40 @@
 	<script type="text/javascript" src="js/jquery-1.12.4.min.js"></script>
 	<script type="text/javascript" src="js/pagination.js"></script>
 	<style type="text/css">
+		.container{
+			margin: 100px auto;
+		}
 		.box,.show{
-			margin: 0 auto;
-			padding-top: 256px;
-			margin: 10px auto;
+			margin: 20px auto;
 			text-align: center;
 		}
 		.show{
-			padding: 0;
+			padding: 10px 0;
 		}
 	</style>
 </head>
 <body>
+<div class="container">
+	<div class="box">
+	    <ul class="pagination" id="cc"></ul>
+	    <div class="show"></div>
+	</div>
 	<div class="box">
 	    <ul class="pagination"></ul>
+	    <div class="show"></div>
 	</div>
-	<div class="show"></div>
-	<script type="text/javascript">
-	var pagination=$('.pagination').pagination({
-	    total: 30,
-	    active: 1,
-	    size: 3,
-	    click: function(e) {
-	    	console.log(pagination);
-	        $('.show').text('当前为：第'+e+'页');
-	    }
-	});
-	</script>
+</div>
+<script type="text/javascript">
+var pagination=$('.pagination').pagination({
+    total: 30,
+    active: 1,
+    size: 2,
+    click: function(active,$target) {
+    	console.log($target);
+        $target.next(".show").text('当前为：第'+active+'页');
+    }
+});
+console.log(pagination);
+</script>
 </body>
 </html>
