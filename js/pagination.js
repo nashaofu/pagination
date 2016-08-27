@@ -51,7 +51,7 @@
         size: 2, // 当前页码两边显示页码数量
         prev: "&lt;", // 上一页默认符号
         next: "&gt;", // 下一页默认符号
-        click: function(e) {} //点击回调函数
+        click: function(active, $target) {} //点击回调函数
     };
     // 插件原型方法
     Pagination.prototype = {
