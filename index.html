@@ -20,22 +20,35 @@
 <body>
 <div class="container">
 	<div class="box">
-	    <ul class="pagination" id="cc"></ul>
+	    <ul class="pagination example-1"></ul>
 	    <div class="show"></div>
 	</div>
 	<div class="box">
-	    <ul class="pagination"></ul>
+	    <ul class="pagination example-1"></ul>
+	    <div class="show"></div>
+	</div>
+	<div class="box">
+	    <ul id="example-2" class="pagination"></ul>
 	    <div class="show"></div>
 	</div>
 </div>
 <script type="text/javascript" src="js/jquery-1.12.4.min.js"></script>
-<!-- <script type="text/javascript" src="js/pagination.js"></script> -->
-<script type="text/javascript" src="js/js.js"></script>
+<script type="text/javascript" src="js/pagination.js"></script>
 <script type="text/javascript">
-var pagination=$('.pagination').pagination({
+var pagination=$('.example-1').pagination({
     total: 30,
     active: 1,
     size: 2,
+    click: function(active,$target) {
+    	console.log($target);
+        $target.next(".show").text('当前为：第'+active+'页');
+    }
+});
+$('#example-2').pagination({
+    total: 30,
+    active: 1,
+    size: 2,
+    style: 1,
     click: function(active,$target) {
     	console.log($target);
         $target.next(".show").text('当前为：第'+active+'页');

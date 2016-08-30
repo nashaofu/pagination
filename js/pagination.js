@@ -39,22 +39,29 @@
         }
         this.active = this.options.active;
         this.size = this.options.size;
-        this.build();
-        this.onClick();
+        this.init();
     };
     // 插件版本号
-    Pagination.VERSION = "1.1.0";
+    Pagination.VERSION = "1.2.0";
     // 插件默认值
     Pagination.DEFAULTS = {
         total: 1, // 页码总数
         active: 1, // 当前页码
         size: 2, // 当前页码两边显示页码数量
-        prev: "&lt;", // 上一页默认符号
-        next: "&gt;", // 下一页默认符号
+        style: "ellipsis", // 插件样式
+        first: "首页", // 第一页
+        last: "尾页", // 最后一页
+        prev: "上一页", // 上一页默认符号
+        next: "下一页", // 下一页默认符号
         click: function(active, $target) {} // 点击回调函数
     };
     // 插件原型方法
     Pagination.prototype = {
+        init: function() {
+            var me = this;
+            me.build();
+            me.onClick();
+        },
         // 构建html
         build: function() {
             var me = this,
@@ -64,21 +71,28 @@
             $target.empty();
             // 上一页
             $target.append('<li><a herf="javascript:void(0)" data-page="prev">' + options.prev + '</a></li>');
-            // 第一页
-            $target.append('<li><a herf="javascript:void(0)" data-page="1">1</a></li>');
+            // 下一页
+            $target.append('<li><a herf="javascript:void(0)" data-page="next">' + options.next + '</a></li>');
             // 生成中间页码
             var size = me.getSize();
             for (var i = size.start; i <= size.end; i++) {
-                $target.append('<li><a herf="javascript:void(0)" data-page="' + i + '">' + i + '</a></li>');
+                $target.find("li:last-child").before('<li><a herf="javascript:void(0)" data-page="' + i + '">' + i + '</a></li>');
             }
-            // 最后一页
-            $target.append('<li><a herf="javascript:void(0)" data-page="' + options.total + '">' + options.total + '</a></li>');
-            // 下一页
-            $target.append('<li><a herf="javascript:void(0)" data-page="next">' + options.next + '</a></li>');
-            // 生成省略页码
-            var ellipsis = me.getEllipsis();
-            for (var i = 0; i < ellipsis.length; i++) {
-                $target.find('li>a[data-page="' + ellipsis[i] + '"]').parent("li").after('<li><span>...</span></li>');
+            // 
+            if (options.style == "ellipsis") {
+                // 第一页
+                $target.find("li:first-child").after('<li><a herf="javascript:void(0)" data-page="1">1</a></li>');
+                // 最后一页
+                $target.find("li:last-child").before('<li><a herf="javascript:void(0)" data-page="' + options.total + '">' + options.total + '</a></li>');
+                // 生成省略页码
+                var ellipsis = me.getEllipsis();
+                for (var i = 0; i < ellipsis.length; i++) {
+                    $target.find('li>a[data-page="' + ellipsis[i] + '"]').parent("li").after('<li><span>...</span></li>');
+                }
+            } else {
+                // 第一页与最后一页
+                $target.find("li:first-child").before('<li><a herf="javascript:void(0)" data-page="first">' + options.first + '</a></li>');
+                $target.find("li:last-child").after('<li><a herf="javascript:void(0)" data-page="last">' + options.last + '</a></li>');
             }
             me.addClass();
         },
@@ -97,13 +111,24 @@
             if (me.active <= me.size) {
                 end += me.size - me.active + 1;
             }
-            // 起始页码不得小于等于1
-            if (start <= 1) {
-                start = 2;
-            }
-            // 终止页码不得大于等于总页数
-            if (end >= options.total) {
-                end = options.total - 1;
+            if (options.style == "ellipsis") {
+                // 起始页码不得小于等于1
+                if (start <= 1) {
+                    start = 2;
+                }
+                // 终止页码不得大于等于总页数
+                if (end >= options.total) {
+                    end = options.total - 1;
+                }
+            } else {
+                // 起始页码不得小于1
+                if (start < 1) {
+                    start = 1;
+                }
+                // 终止页码不得大于总页数
+                if (end > options.total) {
+                    end = options.total;
+                }
             }
             var size = {
                 start: start,
@@ -135,13 +160,15 @@
                 options = me.options;
             // 设置当前页码样式
             $target.find('li>a[data-page="' + me.active + '"]').addClass("active");
-            // 设置上一页样式
+            // 设置上一页与第一页样式
             if (me.active <= 1) {
                 $target.find('li>a[data-page="prev"]').addClass("disabled");
+                $target.find('li>a[data-page="first"]').addClass("disabled");
             }
-            // 设置下一页样式
+            // 设置下一页与最后一页样式
             if (me.active >= options.total) {
                 $target.find('li>a[data-page="next"]').addClass("disabled");
+                $target.find('li>a[data-page="last"]').addClass("disabled");
             }
         },
         // 页码点击事件
@@ -164,6 +191,10 @@
                     } else {
                         return;
                     }
+                } else if ($(this).data("page") === "first") {
+                    me.active = 1;
+                } else if ($(this).data("page") === "last") {
+                    me.active = me.options.total;
                 } else {
                     // 页码点击
                     if (!isNaN($(this).data("page"))) {

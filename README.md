@@ -15,6 +15,7 @@
 		total: 30, // 页码总数
 		active: 1, // 当前页码
         size: 2, // 当前页码两边显示页码数量
+        style: "ellipsis", // 页码显示样式(默认值为ellipsis显示省略符号，非默认值则为连续显示样式)
         prev: "&lt;", // 上一页默认符号
         next: "&gt;", // 下一页默认符号
         click:  function(active,$target) {
@@ -49,11 +50,15 @@
 	<body>
 	<div class="container">
 		<div class="box">
-		    <ul class="pagination" id="cc"></ul>
+		    <ul class="pagination example-1"></ul>
 		    <div class="show"></div>
 		</div>
 		<div class="box">
-		    <ul class="pagination"></ul>
+		    <ul class="pagination example-1"></ul>
+		    <div class="show"></div>
+		</div>
+		<div class="box">
+		    <ul id="example-2" class="pagination"></ul>
 		    <div class="show"></div>
 		</div>
 	</div>
@@ -62,6 +67,16 @@
 	    total: 30,
 	    active: 1,
 	    size: 2,
+	    click: function(active,$target) {
+	    	console.log($target);
+	        $target.next(".show").text('当前为：第'+active+'页');
+	    }
+	});
+	$('#example-2').pagination({
+	    total: 30,
+	    active: 1,
+	    size: 2,
+	    style: 1,
 	    click: function(active,$target) {
 	    	console.log($target);
 	        $target.next(".show").text('当前为：第'+active+'页');
