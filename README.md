@@ -63,7 +63,8 @@
 		</div>
 	</div>
 	<script type="text/javascript">
-	var pagination=$('.pagination').pagination({
+	// 显示省略号的样式，并且使用同一个选择器选择生成多个实例
+	var pagination=$('.example-1').pagination({
 	    total: 30,
 	    active: 1,
 	    size: 2,
@@ -72,6 +73,7 @@
 	        $target.next(".show").text('当前为：第'+active+'页');
 	    }
 	});
+	// 不显示省略号的样式
 	$('#example-2').pagination({
 	    total: 30,
 	    active: 1,
