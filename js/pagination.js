@@ -1,217 +1,218 @@
-/**
- * 黑桃Lab 分页插件 Pagination
- * 插件支持IE7及其以上版本浏览器
- * @param  {[type]} factory [description]
- * @return {[type]}         [description]
+/*!
+ * Pagination v1.3.0 (https://github.com/diaocheng/pagination)
+ * Copyright 2016 程刁
+ * Licensed under MIT
  */
-(function(factory) {
+(function (factory) {
     "use strict";
     if (typeof define === "function" && define.amd) {
         /** AMD规范模块调用 */
         define(["jquery"], factory);
     } else if (typeof define === "function" && define.cmd) {
         /** CMD规范模块调用 */
-        define(function(require, exports, module) {
+        define(function (require, exports, module) {
             factory(require("jquery"));
         });
     } else {
         /** 在浏览器环境下 */
         factory(jQuery);
     }
-})(function($) {
-    "use strict";
+})(function ($) {
+    'use strict';
     /**
      * 分页按钮构造函数
      * @param {[type]} $target [description]
      * @param {[type]} options [description]
      */
-    var Pagination = function($target, options) {
+    var Pagination = function ($target, options) {
         this.$target = $target;
         this.options = $.extend({}, Pagination.DEFAULTS, this.$target.data("pagination"), typeof options == "object" && options);
-        if (this.options.total < 1) {
-            throw new Error("页码总数不得小于1");
-        }
-        if (this.options.active < 1 || this.options.active > this.options.total) {
-            throw new Error("页码必须是1~总页码之间的数字");
-        }
-        if (this.options.size < 1) {
-            throw new Error("可见页码数不得小于1");
-        }
-        this.active = this.options.active;
-        this.size = this.options.size;
         this.init();
     };
     // 插件版本号
-    Pagination.VERSION = "1.2.0";
+    Pagination.VERSION = "1.4.0";
     // 插件默认值
     Pagination.DEFAULTS = {
-        total: 1, // 页码总数
-        active: 1, // 当前页码
+        total: 1, // 数据总数
+        current: 1, // 当前页码
+        length: 10, // 每页数量
         size: 2, // 当前页码两边显示页码数量
-        style: "ellipsis", // 插件样式
-        first: "首页", // 第一页
-        last: "尾页", // 最后一页
-        prev: "上一页", // 上一页默认符号
-        next: "下一页", // 下一页默认符号
-        click: function(active, $target) {} // 点击回调函数
+        prev: "&lt;", // 上一页默认符号
+        next: "&gt;", // 下一页默认符号
+        click: function (e) { } //点击回调函数
     };
     // 插件原型方法
     Pagination.prototype = {
-        init: function() {
-            var me = this;
-            me.build();
-            me.onClick();
+        /**
+         * 插件初始化
+         * 对数据进行分析和对数据的标准化处理
+         * @return {[type]} [description]
+         */
+        init: function () {
+            if (this.options.total < 1) {
+                this.options.total = 1;
+            }
+            if (this.options.current < 1) {
+                this.options.current = 1;
+            }
+            if (this.options.length < 1) {
+                this.options.length = 1;
+            }
+            if (this.options.current > Math.ceil(this.options.total / this.options.length)) {
+                this.options.current = Math.ceil(this.options.total / this.options.length);
+            }
+            if (this.options.size < 1) {
+                this.options.size = 1;
+            }
+            if ('function' === typeof this.options.ajax) {
+                var me = this;
+                this.options.ajax({
+                    current: me.options.current,
+                    length: me.options.length,
+                    total: me.options.total
+                }, function (options) {
+                    return me.refresh(options);
+                }, me.$target);
+            } else {
+                this.render();
+            }
+            this.onClick();
         },
-        // 构建html
-        build: function() {
-            var me = this,
-                $target = me.$target,
-                options = me.options;
-            // 清空分页按钮
+        /**
+         * 渲染分页按钮
+         * @return {[type]} [description]
+         */
+        render: function () {
+            var options = this.options,
+                $target = this.$target;
             $target.empty();
             // 上一页
             $target.append('<li><a herf="javascript:void(0)" data-page="prev">' + options.prev + '</a></li>');
+            var page = this.getPages();
+            if (page.start > 1) {
+                $target.append('<li><a herf="javascript:void(0)" data-page="' + 1 + '">' + 1 + '</a></li>');
+                $target.append('<li><span>...</span></li>');
+
+            }
+            // 生成中间页码
+            for (var i = page.start; i <= page.end; i++) {
+                $target.append('<li><a herf="javascript:void(0)" data-page="' + i + '">' + i + '</a></li>');
+            }
+            if (page.end < Math.ceil(options.total / options.length)) {
+                $target.append('<li><span>...</span></li>');
+                $target.append('<li><a herf="javascript:void(0)" data-page="' + Math.ceil(options.total / options.length) + '">' + Math.ceil(options.total / options.length) + '</a></li>');
+            }
             // 下一页
             $target.append('<li><a herf="javascript:void(0)" data-page="next">' + options.next + '</a></li>');
-            // 生成中间页码
-            var size = me.getSize();
-            for (var i = size.start; i <= size.end; i++) {
-                $target.find("li:last-child").before('<li><a herf="javascript:void(0)" data-page="' + i + '">' + i + '</a></li>');
+            // 设置当前页样式
+            $target.find('li>a[data-page="' + options.current + '"]').parent().addClass('active');
+            // 设置上一页样式
+            if (options.current <= 1) {
+                $target.find('li>a[data-page="prev"]').parent().addClass("disabled");
             }
-            // 
-            if (options.style == "ellipsis") {
-                // 第一页
-                $target.find("li:first-child").after('<li><a herf="javascript:void(0)" data-page="1">1</a></li>');
-                // 最后一页
-                $target.find("li:last-child").before('<li><a herf="javascript:void(0)" data-page="' + options.total + '">' + options.total + '</a></li>');
-                // 生成省略页码
-                var ellipsis = me.getEllipsis();
-                for (var i = 0; i < ellipsis.length; i++) {
-                    $target.find('li>a[data-page="' + ellipsis[i] + '"]').parent("li").after('<li><span>...</span></li>');
-                }
-            } else {
-                // 第一页与最后一页
-                $target.find("li:first-child").before('<li><a herf="javascript:void(0)" data-page="first">' + options.first + '</a></li>');
-                $target.find("li:last-child").after('<li><a herf="javascript:void(0)" data-page="last">' + options.last + '</a></li>');
+            // 设置下一页样式
+            if (options.current >= Math.ceil(options.total / options.length)) {
+                $target.find('li>a[data-page="next"]').parent().addClass("disabled");
             }
-            me.addClass();
         },
-        // 获取中间页码起始值
-        getSize: function() {
-            var me = this,
-                $target = me.$target,
-                options = me.options,
-                start = me.active - me.size,
-                end = me.active + me.size;
+        /**
+         * 根据插件的参数获取分页页码渲染数据
+         * @return {[type]} [description]
+         */
+        getPages: function () {
+            var $target = this.$target,
+                options = this.options,
+                start = options.current - options.size,
+                end = options.current + options.size;
             // 获取开始页码
-            if (me.active >= options.total - me.size) {
-                start -= me.active - options.total + me.size;
+            if (options.current >= Math.ceil(options.total / options.length) - options.size) {
+                start -= options.current - Math.ceil(options.total / options.length) + options.size;
             }
             // 获取结束页码
-            if (me.active <= me.size) {
-                end += me.size - me.active + 1;
+            if (options.current <= options.size) {
+                end += options.size - options.current + 1;
             }
-            if (options.style == "ellipsis") {
-                // 起始页码不得小于等于1
-                if (start <= 1) {
-                    start = 2;
-                }
-                // 终止页码不得大于等于总页数
-                if (end >= options.total) {
-                    end = options.total - 1;
-                }
-            } else {
-                // 起始页码不得小于1
-                if (start < 1) {
-                    start = 1;
-                }
-                // 终止页码不得大于总页数
-                if (end > options.total) {
-                    end = options.total;
-                }
+            // 起始页码不得小于等于1
+            if (start < 1) {
+                start = 1;
             }
-            var size = {
+            // 终止页码不得大于等于总页数
+            if (end > Math.ceil(options.total / options.length)) {
+                end = Math.ceil(options.total / options.length);
+            }
+            var pages = {
                 start: start,
                 end: end
             }
-            return size;
+            return pages;
         },
-        // 获取插入省略符位置
-        getEllipsis: function() {
-            var me = this,
-                $target = me.$target,
-                options = me.options,
-                page = [];
-            $target.find("li").each(function(i) {
-                var current = $(this).children("a[data-page]").data("page");
-                var next = $(this).next("li").children("a[data-page]").data("page");
-                // 如果页码不连续记录下位置
-                if (!isNaN(current) && !isNaN(next)) {
-                    if (current + 1 != next) {
-                        page.push(current);
-                    }
+        /**
+         * 页码点击事件
+         * @return {[type]} [description]
+         */
+        onClick: function () {
+            var $target = this.$target,
+                options = this.options,
+                me = this;
+            $target.on('click', '>li>a[data-page]', function (e) {
+                if ($(this).parent().hasClass('disabled') || $(this).parent().hasClass('active')) {
+                    return
                 }
-            });
-            return page;
-        },
-        addClass: function() {
-            var me = this,
-                $target = me.$target,
-                options = me.options;
-            // 设置当前页码样式
-            $target.find('li>a[data-page="' + me.active + '"]').addClass("active");
-            // 设置上一页与第一页样式
-            if (me.active <= 1) {
-                $target.find('li>a[data-page="prev"]').addClass("disabled");
-                $target.find('li>a[data-page="first"]').addClass("disabled");
-            }
-            // 设置下一页与最后一页样式
-            if (me.active >= options.total) {
-                $target.find('li>a[data-page="next"]').addClass("disabled");
-                $target.find('li>a[data-page="last"]').addClass("disabled");
-            }
-        },
-        // 页码点击事件
-        onClick: function() {
-            var me = this,
-                $target = me.$target,
-                options = me.options;
-            $target.on("click", "a[data-page]", function() {
-                if ($(this).data("page") === "prev") {
-                    // 上一页
-                    if (me.active > 1) {
-                        me.active--;
-                    } else {
-                        return;
-                    }
-                } else if ($(this).data("page") === "next") {
-                    // 下一页
-                    if (me.active < options.total) {
-                        me.active++;
-                    } else {
-                        return;
-                    }
-                } else if ($(this).data("page") === "first") {
-                    me.active = 1;
-                } else if ($(this).data("page") === "last") {
-                    me.active = me.options.total;
+                var button = $(this).data("page");
+                switch (button) {
+                    case 'prev': // 上一页
+                        if (options.current > 1) {
+                            options.current--;
+                        }
+                        break;
+                    case 'next': // 下一页
+                        if (options.current < Math.ceil(options.total)) {
+                            options.current++;
+                        }
+                        break;
+                    default:
+                        button = parseInt(button);
+                        if (!isNaN(button)) {
+                            options.current = parseInt(button);
+                        }
+                        break;
+                }
+                var temp = {
+                    current: options.current,
+                    length: options.length,
+                    total: options.total
+                }
+                if ('function' === typeof options.ajax) {
+                    options.ajax(temp, function (options) {
+                        return me.refresh(options);
+                    }, $target);
                 } else {
-                    // 页码点击
-                    if (!isNaN($(this).data("page"))) {
-                        me.active = parseInt($(this).data("page"));
-                    } else {
-                        return;
-                    }
+                    me.render();
                 }
-                me.build();
                 // 返回当前页和页码列表jQuery对象
-                options.click(me.active, $target);
+                options.click(temp, $target);
             });
+        },
+        /**
+         * 刷新分页按钮方法
+         * @param  {[object]} options [description]
+         * @return {[type]}         [description]
+         */
+        refresh: function (options) {
+            if ('object' === typeof options) {
+                if (options.total) {
+                    this.options.total = options.total;
+                }
+                if (options.length) {
+                    this.options.length = options.length;
+                }
+            }
+            this.render();
         }
     };
     // 定义为jQuery插件
-    $.fn.pagination = function(options) {
-        this.each(function() {
+    $.fn.pagination = function (options) {
+        this.each(function () {
             $(this).data("pagination", new Pagination($(this), options));
         });
         return this;
