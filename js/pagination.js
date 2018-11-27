@@ -154,6 +154,7 @@
             var $target = this.$target,
                 options = this.options,
                 me = this;
+            $target.off('click');
             $target.on('click', '>li>a[data-page]', function (e) {
                 if ($(this).parent().hasClass('disabled') || $(this).parent().hasClass('active')) {
                     return
