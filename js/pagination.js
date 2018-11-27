@@ -1,6 +1,6 @@
 /*!
- * Pagination v1.3.0 (https://github.com/diaocheng/pagination)
- * Copyright 2016 程刁
+ * Pagination v1.4.1 (https://github.com/nashaofu/pagination)
+ * Copyright 2016 nashaofu
  * Licensed under MIT
  */
 (function (factory) {
@@ -154,6 +154,7 @@
             var $target = this.$target,
                 options = this.options,
                 me = this;
+            $target.off('click');
             $target.on('click', '>li>a[data-page]', function (e) {
                 if ($(this).parent().hasClass('disabled') || $(this).parent().hasClass('active')) {
                     return

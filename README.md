@@ -201,4 +201,4 @@
 	</body>
 	</html>
 ## 插件示例
-[DEMO](https://diaocheng.github.io/pagination/)
+[DEMO](https://nashaofu.github.io/pagination/)
